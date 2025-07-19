@@ -1,0 +1,160 @@
+openapi: 3.0.0
+info:
+  title: Depossco API
+  description: API for Depossco services
+  version: 1.0.0
+servers:
+  - url: https://api.depossco.com/v1
+paths:
+  /inventory:
+    get:
+      summary: Get inventory items
+      description: Returns a list of inventory items
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of items to return
+          required: false
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InventoryItem'
+  /inventory/{itemId}:
+    get:
+      summary: Get inventory item by ID
+      description: Returns a single inventory item
+      parameters:
+        - name: itemId
+          in: path
+          description: ID of the inventory item
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryItem'
+        '404':
+          description: Item not found
+  /orders:
+    post:
+      summary: Create a new order
+      description: Creates a new order with the specified items
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+      responses:
+        '201':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Invalid request
+components:
+  schemas:
+    InventoryItem:
+      type: object
+      required:
+        - id
+        - name
+        - quantity
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the item
+        name:
+          type: string
+          description: Name of the item
+        description:
+          type: string
+          description: Description of the item
+        quantity:
+          type: integer
+          description: Available quantity
+        price:
+          type: number
+          format: float
+          description: Price per unit
+    OrderRequest:
+      type: object
+      required:
+        - items
+      properties:
+        customerId:
+          type: string
+          description: Customer ID
+        items:
+          type: array
+          items:
+            type: object
+            required:
+              - itemId
+              - quantity
+            properties:
+              itemId:
+                type: string
+                description: ID of the inventory item
+              quantity:
+                type: integer
+                description: Quantity to order
+    Order:
+      type: object
+      required:
+        - id
+        - items
+        - status
+      properties:
+        id:
+          type: string
+          description: Order ID
+        customerId:
+          type: string
+          description: Customer ID
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        status:
+          type: string
+          enum: [pending, processing, shipped, delivered, cancelled]
+          description: Order status
+        createdAt:
+          type: string
+          format: date-time
+          description: Order creation timestamp
+    OrderItem:
+      type: object
+      required:
+        - itemId
+        - quantity
+        - price
+      properties:
+        itemId:
+          type: string
+          description: ID of the inventory item
+        name:
+          type: string
+          description: Name of the item
+        quantity:
+          type: integer
+          description: Quantity ordered
+        price:
+          type: number
+          format: float
+          description: Price per unit 
